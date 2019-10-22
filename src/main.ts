@@ -266,9 +266,29 @@ async function updateCheckRun(
     ...github.context.repo
   });
 
-  const check = response.data.check_runs.find(
-    check => check.name === checkName
-  );
+  console.log(response.data);
+
+  let check = response.data.check_runs.find(check => check.name === checkName);
+
+  // Bail if we have more than one check and there's no named run found
+  if (!check && response.data.check_runs.length >= 2) {
+    core.debug(`Couldn't find a check run matching "${checkName}".`);
+
+    // Create new check run as we couldn't find a matching one.
+    await tools.checks.create({
+      ...github.context.repo,
+      name: checkName,
+      head_sha: github.context.sha,
+      started_at: new Date().toISOString()
+    });
+
+    const response = await tools.checks.listForRef({
+      ref: github.context.ref,
+      ...github.context.repo
+    });
+
+    check = response.data.check_runs.find(check => check.name === checkName);
+  }
 
   if (!check) {
     return core.setFailed(
