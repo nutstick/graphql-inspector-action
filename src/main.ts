@@ -270,6 +270,7 @@ async function updateCheckRun(
   const check = response.data.check_runs.find(
     check => check.name === checkName
   );
+  console.log(process.env, response.data.check_runs);
 
   if (!check) {
     return core.setFailed(
