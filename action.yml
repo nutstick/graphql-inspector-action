@@ -1,10 +1,6 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
-inputs:
-  myInput:              # change this
-    description: 'input description here'
-    default: 'default value if applicable'
+name: 'graphql-inspector-action'
+description: 'GraphQL Inspector Github Action'
+author: 'Nuttapat Kirawittaya'
 runs:
   using: 'node12'
   main: 'lib/main.js'
