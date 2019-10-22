@@ -35,7 +35,7 @@ async function run() {
   });
 
   // config
-  const config = await loadConfig(tools, loadFile);
+  const config = await loadConfig(tools, owner, repo);
 
   if (!config) {
     core.error(`No config file`);
@@ -53,12 +53,12 @@ async function run() {
     new: buildSchema(await loadFile(newPointer))
   };
 
-  tools.log.info(`Both schemas built`);
+  core.info(`Both schemas built`);
 
   const actions: Array<Promise<ActionResult>> = [];
 
   if (config.diff) {
-    tools.log.info(`Start comparing schemas`);
+    core.info(`Start comparing schemas`);
     actions.push(
       diff({
         path: config.schema.path,
@@ -112,10 +112,7 @@ async function run() {
 
 interface QueryResult {
   repository: null | {
-    yaml: null | {
-      text: null | string;
-    };
-    yml: null | {
+    object: null | {
       text: null | string;
     };
   };
@@ -131,7 +128,65 @@ function fileLoader({
   repo: string;
 }) {
   const query = `
-    query GetFile($repo: String!, $owner: String!, $yamlExpression: String!, $ymlExpression: String!) {
+    query GetFile($repo: String!, $owner: String!, $expression: String!) {
+      repository(name: $repo, owner: $owner) {
+        object(expression: $expression) {
+          ... on Blob {
+            text
+          }
+        }
+      }
+    }
+  `;
+
+  return async function loadFile(file: {
+    ref: string;
+    path: string;
+  }): Promise<string> {
+    const result: QueryResult = await tools.graphql(query, {
+      repo,
+      owner,
+      expression: `${file.ref}:${file.path}`
+    });
+    core.info(`Query ${file.ref}:${file.path} from ${owner}/${repo}`);
+
+    try {
+      if (
+        result &&
+        result.repository &&
+        result.repository.object &&
+        result.repository.object.text
+      ) {
+        return result.repository.object.text;
+      }
+      throw new Error('result.repository.object.text is null');
+    } catch (error) {
+      console.log(result);
+      console.error(error);
+      throw new Error(`Failed to load '${file.path}' (ref: ${file.ref})`);
+    }
+  };
+}
+
+interface ConfigQueryResult {
+  repository: null | {
+    yaml: null | {
+      text: null | string;
+    };
+    yml: null | {
+      text: null | string;
+    };
+  };
+}
+
+async function loadConfig(
+  tools: github.GitHub,
+  owner: string,
+  repo: string
+): Promise<Config | undefined> {
+  const ref = process.env.GITHUB_SHA!;
+  const query = `
+    query GetConfigFile($repo: String!, $owner: String!, $yamlExpression: String!, $ymlExpression: String!) {
       repository(name: $repo, owner: $owner) {
         yaml: object(expression: $yamlExpression) {
           ... on Blob {
@@ -147,11 +202,12 @@ function fileLoader({
     }
   `;
 
-  return async function loadFile(file: {
+  async function loadConfigFile(file: {
     ref: string;
     path: string;
   }): Promise<string> {
-    const result: QueryResult = await tools.graphql(query, {
+    // TODO: Using `ref`
+    const result: ConfigQueryResult = await tools.graphql(query, {
       repo,
       owner,
       yamlExpression: `${file.ref}:${file.path}.yaml`,
@@ -183,23 +239,14 @@ function fileLoader({
         `Failed to load '${file.path}.yaml' or '${file.path}.yml' (ref: ${file.ref})`
       );
     }
-  };
-}
-
-async function loadConfig(
-  tools: github.GitHub,
-  loadFile: (file: { ref: string; path: string }) => Promise<string>
-): Promise<Config | undefined> {
-  const ref = process.env.GITHUB_SHA!;
-
-  // TODO: Using `ref`
+  }
 
   try {
-    const text = await loadFile({ ref, path: `${base}/${identifier}` });
+    const text = await loadConfigFile({ ref, path: `${base}/${identifier}` });
     return safeLoad(text);
   } catch (e) {
-    tools.log.info(e);
-    tools.log.info(
+    console.error(e);
+    core.setFailed(
       `Failed to find ${base}/${identifier}.yaml or ${base}/${identifier}.yml file`
     );
   }
@@ -212,15 +259,13 @@ async function updateCheckRun(
   tools: github.GitHub,
   { conclusion, output }: UpdateCheckRunOptions
 ) {
-  const checkName = process.env.GITHUB_ACTION!;
+  const checkName = process.env.GITHUB_WORKFLOW!;
 
   const response = await tools.checks.listForRef({
     status: 'in_progress' as 'in_progress',
     ref: github.context.ref,
     ...github.context.repo
   });
-
-  console.log(response);
 
   const check = response.data.check_runs.find(
     check => check.name === checkName
