@@ -151,7 +151,7 @@ function fileLoader({
     ref: string;
     path: string;
   }): Promise<string> {
-    const result: { data: QueryResult } = await tools.graphql(query, {
+    const result: QueryResult = await tools.graphql(query, {
       repo,
       owner,
       yamlExpression: `${file.ref}:${file.path}.yaml`,
@@ -160,19 +160,19 @@ function fileLoader({
 
     try {
       if (
-        result.data &&
-        result.data.repository &&
-        result.data.repository.yaml &&
-        result.data.repository.yaml.text
+        result &&
+        result.repository &&
+        result.repository.yaml &&
+        result.repository.yaml.text
       ) {
-        return result.data.repository.yaml.text;
+        return result.repository.yaml.text;
       } else if (
-        result.data &&
-        result.data.repository &&
-        result.data.repository.yml &&
-        result.data.repository.yml.text
+        result &&
+        result.repository &&
+        result.repository.yml &&
+        result.repository.yml.text
       ) {
-        return result.data.repository.yml.text;
+        return result.repository.yml.text;
       }
       // @ts-ignore
       return result.repository.object.text;
