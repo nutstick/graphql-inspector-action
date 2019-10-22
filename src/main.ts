@@ -259,10 +259,9 @@ async function updateCheckRun(
   tools: github.GitHub,
   { conclusion, output }: UpdateCheckRunOptions
 ) {
-  const checkName = process.env.GITHUB_WORKFLOW!;
+  const checkName = core.getInput('check_name');
 
   const response = await tools.checks.listForRef({
-    status: 'in_progress' as 'in_progress',
     ref: github.context.ref,
     ...github.context.repo
   });
