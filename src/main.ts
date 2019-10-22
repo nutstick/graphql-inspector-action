@@ -9,7 +9,6 @@ import {
 import { diff } from '@graphql-inspector/github/dist/diff';
 import { buildSchema } from 'graphql';
 import { safeLoad } from 'js-yaml';
-import { wait } from './wait';
 import { ChecksUpdateParams } from '@octokit/rest';
 
 const base = '.github';
