@@ -221,6 +221,8 @@ async function updateCheckRun(
     ...github.context.repo
   });
 
+  console.log(response);
+
   const check = response.data.check_runs.find(
     check => check.name === checkName
   );
