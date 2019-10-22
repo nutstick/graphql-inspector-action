@@ -271,7 +271,7 @@ async function updateCheckRun(
   let check = response.data.check_runs.find(check => check.name === checkName);
 
   // Bail if we have more than one check and there's no named run found
-  if (!check && response.data.check_runs.length >= 2) {
+  if (!check && response.data.check_runs.length < 2) {
     core.debug(`Couldn't find a check run matching "${checkName}".`);
 
     // Create new check run as we couldn't find a matching one.
