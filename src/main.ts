@@ -275,7 +275,7 @@ async function updateCheckRun(
     // Create new check run as we couldn't find a matching one.
     await tools.checks.create({
       ...github.context.repo,
-      name: checkName,
+      name: github.context.action,
       head_sha: github.context.sha,
       status: 'in_progress',
       started_at: new Date().toISOString()
