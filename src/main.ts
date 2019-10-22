@@ -266,8 +266,6 @@ async function updateCheckRun(
     ...github.context.repo
   });
 
-  console.log(response.data);
-
   let check = response.data.check_runs.find(check => check.name === checkName);
 
   // Bail if we have more than one check and there's no named run found
@@ -279,6 +277,7 @@ async function updateCheckRun(
       ...github.context.repo,
       name: checkName,
       head_sha: github.context.sha,
+      status: 'in_progress',
       started_at: new Date().toISOString()
     });
 
@@ -286,8 +285,6 @@ async function updateCheckRun(
       ref: github.context.ref,
       ...github.context.repo
     });
-
-    console.log(response.data);
 
     check = response.data.check_runs.find(check => check.name === checkName);
   }
