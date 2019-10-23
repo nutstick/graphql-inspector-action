@@ -1,0 +1,14 @@
+name: 'Test workflow'
+on: [pull_request]
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: GraphQL Inspector
+        uses: nutstick/graphql-inspector-action@v0.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          check_name: GraphQL Inspector

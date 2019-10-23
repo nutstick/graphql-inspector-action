@@ -1,0 +1,4 @@
+diff: true
+schema:
+  ref: master
+  path: __tests__/fixtures/schema.graphql
