@@ -255,6 +255,7 @@ async function loadConfig(
 type UpdateCheckRunOptions = Required<
   Pick<ChecksUpdateParams, 'conclusion' | 'output'>
 >;
+
 async function updateCheckRun(
   tools: github.GitHub,
   { conclusion, output }: UpdateCheckRunOptions
@@ -266,28 +267,9 @@ async function updateCheckRun(
     ...github.context.repo
   });
 
-  let check = response.data.check_runs.find(check => check.name === checkName);
-
-  // Bail if we have more than one check and there's no named run found
-  if (!check && response.data.check_runs.length < 2) {
-    core.debug(`Couldn't find a check run matching "${checkName}".`);
-
-    // Create new check run as we couldn't find a matching one.
-    await tools.checks.create({
-      ...github.context.repo,
-      name: checkName,
-      head_sha: github.context.sha,
-      status: 'in_progress',
-      started_at: new Date().toISOString()
-    });
-
-    const response = await tools.checks.listForRef({
-      ref: github.context.ref,
-      ...github.context.repo
-    });
-
-    check = response.data.check_runs.find(check => check.name === checkName);
-  }
+  const check = response.data.check_runs.find(
+    check => check.name === checkName
+  );
 
   if (!check) {
     return core.setFailed(
