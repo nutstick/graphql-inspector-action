@@ -252,9 +252,22 @@ async function loadConfig(
   }
 }
 
+async function createCheck(tools: github.GitHub) {
+  const { data } = await tools.checks.create({
+    ...github.context.repo,
+    head_sha: github.context.sha,
+    name: github.context.action,
+    started_at: new Date().toISOString(),
+    status: 'in_progress'
+  });
+
+  return data;
+}
+
 type UpdateCheckRunOptions = Required<
   Pick<ChecksUpdateParams, 'conclusion' | 'output'>
 >;
+
 async function updateCheckRun(
   tools: github.GitHub,
   { conclusion, output }: UpdateCheckRunOptions
@@ -265,21 +278,25 @@ async function updateCheckRun(
     ref: github.context.ref,
     ...github.context.repo
   });
+  console.log(response.data.check_runs);
+
+  console.log(github.context);
 
   let check = response.data.check_runs.find(check => check.name === checkName);
 
   // Bail if we have more than one check and there's no named run found
-  if (!check && response.data.check_runs.length < 2) {
-    core.debug(`Couldn't find a check run matching "${checkName}".`);
+  if (!check) {
+    core.warning(`Couldn't find a check run matching "${checkName}".`);
 
     // Create new check run as we couldn't find a matching one.
-    await tools.checks.create({
-      ...github.context.repo,
-      name: github.context.action,
-      head_sha: github.context.sha,
-      status: 'in_progress',
-      started_at: new Date().toISOString()
-    });
+    // const data = await createCheck(tools);
+    // await tools.checks.create({
+    //   ...github.context.repo,
+    //   name: github.context.action,
+    //   head_sha: github.context.sha,
+    //   status: 'in_progress',
+    //   started_at: new Date().toISOString()
+    // });
 
     const response = await tools.checks.listForRef({
       ref: github.context.ref,
