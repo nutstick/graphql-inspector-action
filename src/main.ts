@@ -1,5 +1,5 @@
-import * as core from '@actions/core';
-import * as github from '@actions/github';
+import core from '@actions/core';
+import github from '@actions/github';
 import { Config, SchemaPointer } from '@graphql-inspector/github/dist/probot';
 import {
   ActionResult,
@@ -252,6 +252,18 @@ async function loadConfig(
   }
 }
 
+async function createCheck(tools: github.GitHub) {
+  const { data } = await tools.checks.create({
+    ...github.context.repo,
+    head_sha: github.context.sha,
+    name: github.context.action,
+    started_at: new Date().toISOString(),
+    status: 'in_progress'
+  });
+
+  return data;
+}
+
 type UpdateCheckRunOptions = Required<
   Pick<ChecksUpdateParams, 'conclusion' | 'output'>
 >;
@@ -266,10 +278,16 @@ async function updateCheckRun(
     ref: github.context.ref,
     ...github.context.repo
   });
+  console.log(response.data.check_runs);
 
-  const check = response.data.check_runs.find(
-    check => check.name === checkName
-  );
+  console.log(github.context);
+
+  let check = response.data.check_runs.find(check => check.name === checkName);
+
+  // Bail if we have more than one check and there's no named run found
+  if (!check) {
+    core.setFailed(`Couldn't find a check run matching "${checkName}".`);
+  }
 
   if (!check) {
     return core.setFailed(
