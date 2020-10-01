@@ -20,7 +20,7 @@
   "author": "Nuttapat Kirawittaya <nuttapat.kirawittaya@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.0.0",
+    "@actions/core": "^1.2.6",
     "@actions/github": "^1.1.0",
     "@graphql-inspector/github": "^1.26.0",
     "graphql": "^14.5.8",
