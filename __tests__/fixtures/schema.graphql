@@ -37,7 +37,7 @@ interface Node {
 
 type User implements Node {
   id: ID!
-  username: String!
+  username: String
   avatar: String!
 }
 
@@ -57,7 +57,6 @@ type Comment implements Node {
   content: String!
   author: User!
   likes: UserConnection!
-  createAt: DateTime!
 }
 
 type CommentEdges implements Edges {
