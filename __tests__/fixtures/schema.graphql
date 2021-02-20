@@ -1,10 +1,25 @@
 scalar Url
 scalar DateTime
 
+"""
+Information about pagination in a connection.
+"""
 type PageInfo {
+  """
+  When paginating forwards, are there more items?
+  """
   hasNextPage: Boolean!
+  """
+  When paginating backwards, are there more items?
+  """
   hasPreviousPage: Boolean!
+  """
+  When paginating backwards, the cursor to continue.
+  """
   startCursor: String
+  """
+  When paginating forwards, the cursor to continue.
+  """
   endCursor: String
 }
 
@@ -31,6 +46,9 @@ enum Direction {
   DESC
 }
 
+"""
+Base Node
+"""
 interface Node {
   id: ID!
 }
@@ -57,7 +75,6 @@ type Comment implements Node {
   content: String!
   author: User!
   likes: UserConnection!
-  createAt: DateTime!
 }
 
 type CommentEdges implements Edges {
@@ -92,5 +109,5 @@ type PostConnection implements Connection {
 }
 
 type Query {
-  posts: PostConnection!
+  posts: PostConnection
 }
